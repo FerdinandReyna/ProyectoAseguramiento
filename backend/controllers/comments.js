@@ -3,7 +3,10 @@ const {
   UnauthorizedError,
   FieldRequiredError,
   ForbiddenError,
+  ValidationError,
 } = require("../helper/customErrors");
+
+const MAX_COMMENT_LENGTH = 1000;
 const { appendFollowers } = require("../helper/helpers");
 const { Article, Comment, User } = require("../models");
 
@@ -39,7 +42,12 @@ const createComment = async (req, res, next) => {
     if (!loggedUser) throw new UnauthorizedError();
 
     const { body } = req.body.comment;
-    if (!body) throw new FieldRequiredError("Comment body");
+    if (!body || !body.trim()) throw new FieldRequiredError("Comment body");
+    if (body.length > MAX_COMMENT_LENGTH) {
+      throw new ValidationError(
+        `Comment must have at most ${MAX_COMMENT_LENGTH} characters`,
+      );
+    }
 
     const { slug } = req.params;
     const article = await Article.findOne({ where: { slug: slug } });

@@ -15,11 +15,15 @@ const signUp = async (req, res, next) => {
     if (!username) throw new FieldRequiredError(`A username`);
     if (!email) throw new FieldRequiredError(`An email`);
     if (!password) throw new FieldRequiredError(`A password`);
+    if (password.length < 8 || password.length > 64) {
+      throw new ValidationError("Password must be between 8 and 64 characters");
+    }
 
-    const userExists = await User.findOne({
-      where: { email: req.body.user.email },
-    });
+    const userExists = await User.findOne({ where: { email: email } });
     if (userExists) throw new AlreadyTakenError("Email", "try logging in");
+
+    const usernameTaken = await User.findOne({ where: { username: username } });
+    if (usernameTaken) throw new AlreadyTakenError("Username");
 
     const newUser = await User.create({
       email: email,
@@ -41,6 +45,8 @@ const signUp = async (req, res, next) => {
 const signIn = async (req, res, next) => {
   try {
     const { user } = req.body;
+    if (!user?.email) throw new FieldRequiredError("An email");
+    if (!user?.password) throw new FieldRequiredError("A password");
 
     const existentUser = await User.findOne({ where: { email: user.email } });
     if (!existentUser) throw new NotFoundError("Email", "sign in first");
@@ -48,7 +54,7 @@ const signIn = async (req, res, next) => {
     const pwd = await bcryptCompare(user.password, existentUser.password);
     if (!pwd) throw new ValidationError("Wrong email/password combination");
 
-    existentUser.dataValues.token = await jwtSign(user);
+    existentUser.dataValues.token = await jwtSign(existentUser);
 
     res.json({ user: existentUser });
   } catch (error) {
