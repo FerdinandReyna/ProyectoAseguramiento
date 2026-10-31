@@ -14,7 +14,12 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
     updateArticles((prev) => ({ ...prev, articles: updatedArticles }));
   };
 
-  return articles?.length > 0 ? (
+  if (!articles?.length) {
+    const message = loading ? "Loading article..." : "No articles available.";
+    return <div className="article-preview">{message}</div>;
+  }
+
+  return (
     articles.map((article) => {
       return (
         <div className="article-preview" key={article.slug}>
@@ -40,10 +45,6 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
         </div>
       );
     })
-  ) : loading ? (
-    <div className="article-preview">Loading article...</div>
-  ) : (
-    <div className="article-preview">No articles available.</div>
   );
 }
 

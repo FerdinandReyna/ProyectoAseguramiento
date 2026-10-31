@@ -11,11 +11,15 @@ function ProfileFavArticles() {
     username,
   });
 
-  return loading ? (
-    <div className="article-preview">
-      <em>Loading {username} favorites articles...</em>
-    </div>
-  ) : articles.length > 0 ? (
+  if (loading) {
+    return (
+      <div className="article-preview">
+        <em>Loading {username} favorites articles...</em>
+      </div>
+    );
+  }
+
+  return articles.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}
