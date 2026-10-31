@@ -27,13 +27,15 @@ const updateUser = async (req, res, next) => {
       user,
     } = req.body;
 
-    Object.entries(user).forEach((entry) => {
-      const [key, value] = entry;
-
-      if (value !== undefined && key !== "password") loggedUser[key] = value;
+    // Solo se permiten estos campos; evita que el cliente sobrescriba id u otros atributos.
+    const editableFields = ["username", "email", "bio", "image"];
+    editableFields.forEach((key) => {
+      if (user[key] !== undefined) loggedUser[key] = user[key];
     });
 
-    if (password !== undefined || password !== "") {
+    // Antes: (password !== undefined || password !== "") era siempre verdadero y
+    // provocaba un error 500 al actualizar el perfil sin enviar contraseña.
+    if (password !== undefined && password !== "") {
       loggedUser.password = await bcryptHash(password);
     }
 

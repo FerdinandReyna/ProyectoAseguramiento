@@ -1,0 +1,140 @@
+# Pipeline de integración y despliegue continuo (E13).
+# Orden: compilación -> pruebas unitarias -> SonarCloud + quality gate -> pruebas de API -> despliegue.
+# Cada etapa depende de la anterior: si una falla, las siguientes no se ejecutan
+# y la protección de ramas bloquea el merge hacia qa y main.
+name: CI-CD Conduit
+
+on:
+  push:
+    branches: [dev, qa, main]
+  pull_request:
+    branches: [dev, qa, main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  build:
+    name: 1. Compilación
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Compilar frontend
+        run: npm run build -w frontend
+      - name: Verificar que el backend carga sin errores de sintaxis
+        run: node --check backend/index.js && for f in backend/controllers/*.js; do node --check "$f"; done
+
+  unit-tests:
+    name: 2. Pruebas unitarias
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Vitest con cobertura de módulos críticos
+        run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-reports
+          path: |
+            coverage/
+            reports/junit.xml
+
+  sonar:
+    name: 3. Análisis estático (SonarCloud)
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Sonar necesita el historial completo para el análisis de código nuevo
+      - uses: actions/download-artifact@v4
+        with:
+          name: unit-test-reports
+      - name: Análisis SonarCloud y espera del quality gate
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
+
+  api-tests:
+    name: 4. Pruebas de API (Newman)
+    needs: sonar
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conduit_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PORT: 3001
+      JWT_KEY: clave-solo-para-ci
+      DEV_DB_USERNAME: postgres
+      DEV_DB_PASSWORD: postgres
+      DEV_DB_NAME: conduit_ci
+      DEV_DB_HOSTNAME: localhost
+      DEV_DB_DIALECT: postgres
+      DEV_DB_LOGGING: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Levantar la API
+        run: |
+          nohup node backend/index.js > api.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3001/api/tags && exit 0
+            sleep 2
+          done
+          cat api.log; exit 1
+      - name: Ejecutar colección Postman
+        run: npm run test:api
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-test-reports
+          path: qa-evidence/newman-*
+
+  deploy:
+    name: 5. Despliegue
+    needs: api-tests
+    # Solo se despliega con push (merge ya aprobado) a qa o main
+    if: github.event_name == 'push' && (github.ref_name == 'qa' || github.ref_name == 'main')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'qa' }}
+    steps:
+      - name: Disparar despliegue en Render
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then echo "Falta el secreto RENDER_DEPLOY_HOOK en el ambiente"; exit 1; fi
+          curl -sf -X POST "$DEPLOY_HOOK"
+          echo "Despliegue solicitado. Esperando a que la aplicación responda..."
+          for i in $(seq 1 40); do
+            sleep 15
+            curl -sf "$APP_URL/api/tags" && { echo; echo "Aplicación arriba en $APP_URL"; exit 0; }
+          done
+          echo "La aplicación no respondió a tiempo"; exit 1

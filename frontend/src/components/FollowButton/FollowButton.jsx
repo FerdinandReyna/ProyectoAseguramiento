@@ -8,7 +8,8 @@ function FollowButton({ followersCount, following, handler, username }) {
 
   const buttonStyle = following ? "btn-secondary" : "";
   const iconStyle = following ? "ion-minus-round" : "ion-plus-round";
-  const text = !isAuth ? "Followers" : following ? " Unfollow " : " Follow ";
+  const followText = following ? " Unfollow " : " Follow ";
+  const text = isAuth ? followText : "Followers";
 
   const handleClick = () => {
     if (!isAuth) return alert("You need to login first");

@@ -12,11 +12,15 @@ function HomeArticles() {
     tagName,
   });
 
-  return loading ? (
-    <div className="article-preview">
-      <em>Loading articles list...</em>
-    </div>
-  ) : articles.length > 0 ? (
+  if (loading) {
+    return (
+      <div className="article-preview">
+        <em>Loading articles list...</em>
+      </div>
+    );
+  }
+
+  return articles.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}
