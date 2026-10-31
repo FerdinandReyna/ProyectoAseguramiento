@@ -4,6 +4,7 @@ const {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
+  ValidationError,
 } = require("../helper/customErrors");
 const {
   appendFollowers,
@@ -12,6 +13,17 @@ const {
   slugify,
 } = require("../helper/helpers");
 const { Article, Tag, User } = require("../models");
+
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+const MAX_TAGS = 10;
+
+// RF-14: límite por defecto de 20 y máximo de 100 artículos por página.
+const normalizeLimit = (value) => {
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 1) return DEFAULT_LIMIT;
+  return Math.min(parsed, MAX_LIMIT);
+};
 
 const includeOptions = [
   { model: Tag, as: "tagList", attributes: ["name"] },
@@ -23,7 +35,8 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, offset = 0 } = req.query;
+    const limit = normalizeLimit(req.query.limit);
     const searchOptions = {
       include: [
         {
@@ -39,7 +52,7 @@ const allArticles = async (req, res, next) => {
           ...(author && { where: { username: author } }),
         },
       ],
-      limit: parseInt(limit),
+      limit: limit,
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
     };
@@ -47,6 +60,7 @@ const allArticles = async (req, res, next) => {
     let articles = { rows: [], count: 0 };
     if (favorited) {
       const user = await User.findOne({ where: { username: favorited } });
+      if (!user) throw new NotFoundError("User");
 
       articles.rows = await user.getFavorites(searchOptions);
       articles.count = await user.countFavorites();
@@ -76,10 +90,13 @@ const createArticle = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { title, description, body, tagList } = req.body.article;
+    const { title, description, body, tagList = [] } = req.body.article;
     if (!title) throw new FieldRequiredError("A title");
     if (!description) throw new FieldRequiredError("A description");
     if (!body) throw new FieldRequiredError("An article body");
+    if (tagList.length > MAX_TAGS) {
+      throw new ValidationError(`An article can have at most ${MAX_TAGS} tags`);
+    }
 
     const slug = slugify(title);
     const slugInDB = await Article.findOne({ where: { slug: slug } });
@@ -124,12 +141,13 @@ const articlesFeed = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { limit = 3, offset = 0 } = req.query;
+    const { offset = 0 } = req.query;
+    const limit = normalizeLimit(req.query.limit);
     const authors = await loggedUser.getFollowing();
 
     const articles = await Article.findAndCountAll({
       include: includeOptions,
-      limit: parseInt(limit),
+      limit: limit,
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
       where: { userId: authors.map((author) => author.id) },

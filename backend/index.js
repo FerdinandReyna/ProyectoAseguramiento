@@ -13,6 +13,7 @@ const profilesRoutes = require("./routes/profiles");
 const tagsRoutes = require("./routes/tags");
 
 const app = express();
+app.disable("x-powered-by"); // no revelar la tecnología del servidor (hotspot de seguridad)
 app.use(cors());
 app.use(express.json());
 

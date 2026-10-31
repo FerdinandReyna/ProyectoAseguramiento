@@ -45,7 +45,7 @@ function ArticleEditorForm() {
   const tagsInputHandler = (e) => {
     const value = e.target.value;
 
-    setForm((form) => ({ ...form, tagList: value.split(/,| /) }));
+    setForm((form) => ({ ...form, tagList: value.split(/[, ]/) }));
   };
 
   const formSubmit = (e) => {

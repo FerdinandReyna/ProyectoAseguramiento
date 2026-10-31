@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "tagList",
         foreignKey: "articleId",
         timestamps: false,
-        onDelete: "cascade", // FIXME: delete tags
+        onDelete: "cascade", // Las etiquetas huérfanas se conservan para reutilizarlas
       });
 
       // Favorites

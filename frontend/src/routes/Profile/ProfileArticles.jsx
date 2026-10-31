@@ -11,11 +11,15 @@ function ProfileArticles() {
     username,
   });
 
-  return loading ? (
-    <div className="article-preview">
-      <em>Loading {username} articles...</em>
-    </div>
-  ) : articles.length > 0 ? (
+  if (loading) {
+    return (
+      <div className="article-preview">
+        <em>Loading {username} articles...</em>
+      </div>
+    );
+  }
+
+  return articles.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}

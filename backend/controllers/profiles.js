@@ -1,4 +1,8 @@
-const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
+const {
+  UnauthorizedError,
+  NotFoundError,
+  ValidationError,
+} = require("../helper/customErrors");
 const { appendFollowers } = require("../helper/helpers");
 const { User } = require("../models");
 
@@ -35,6 +39,10 @@ const followToggler = async (req, res, next) => {
       attributes: { exclude: "email" },
     });
     if (!profile) throw new NotFoundError("User profile");
+
+    if (req.method === "POST" && profile.id === loggedUser.id) {
+      throw new ValidationError("You cannot follow yourself");
+    }
 
     if (req.method === "POST") {
       await profile.addFollower(loggedUser);

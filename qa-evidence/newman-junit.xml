@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Conduit - Pruebas de API" tests="30" time="0.543">
+  <testsuite name="1. Autenticación / 01 Registrar usuario A" id="896b92f9-784c-45d8-8670-e6b962fe9b3e" timestamp="2026-10-31T00:00:22.341Z" tests="4" failures="0" errors="0" time="0.110">
+    <testcase name="Código 201" time="0.110" classname="1Autenticacion01RegistrarUsuarioA"/>
+    <testcase name="Esquema de usuario sin contraseña (RNF-04)" time="0.110" classname="1Autenticacion01RegistrarUsuarioA"/>
+    <testcase name="Usuario creado con el nombre enviado" time="0.110" classname="1Autenticacion01RegistrarUsuarioA"/>
+    <testcase name="Tiempo de respuesta menor a 800 ms" time="0.110" classname="1Autenticacion01RegistrarUsuarioA"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 02 Registrar con correo duplicado" id="f75c1b60-582e-486c-abc6-a87baeff7642" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.007">
+    <testcase name="Código 422" time="0.007" classname="1Autenticacion02RegistrarConCorreoDuplicado"/>
+    <testcase name="Esquema de error" time="0.007" classname="1Autenticacion02RegistrarConCorreoDuplicado"/>
+    <testcase name="Mensaje esperado" time="0.007" classname="1Autenticacion02RegistrarConCorreoDuplicado"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 03 Registrar con contraseña de 7 caracteres" id="4e7482d0-4987-47f9-b0bd-0d335faf11aa" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.003">
+    <testcase name="Código 422" time="0.003" classname="1Autenticacion03RegistrarConContrasenaDe7Caracteres"/>
+    <testcase name="Esquema de error" time="0.003" classname="1Autenticacion03RegistrarConContrasenaDe7Caracteres"/>
+    <testcase name="Mensaje esperado" time="0.003" classname="1Autenticacion03RegistrarConContrasenaDe7Caracteres"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 04 Iniciar sesión A" id="19dc302f-fa13-43a9-8bc0-77445ab46dca" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.067">
+    <testcase name="Código 200" time="0.067" classname="1Autenticacion04IniciarSesionA"/>
+    <testcase name="Esquema de usuario" time="0.067" classname="1Autenticacion04IniciarSesionA"/>
+    <testcase name="Token JWT con tres partes" time="0.067" classname="1Autenticacion04IniciarSesionA"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 05 Iniciar sesión con contraseña incorrecta" id="d484666e-c5fb-40eb-8087-3ab133d0db92" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.066">
+    <testcase name="Código 422" time="0.066" classname="1Autenticacion05IniciarSesionConContrasenaIncorrecta"/>
+    <testcase name="Esquema de error" time="0.066" classname="1Autenticacion05IniciarSesionConContrasenaIncorrecta"/>
+    <testcase name="Mensaje esperado" time="0.066" classname="1Autenticacion05IniciarSesionConContrasenaIncorrecta"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 06 Obtener usuario actual" id="fda8249a-9a12-4c45-a816-bf711d98a2eb" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="Código 200" time="0.004" classname="1Autenticacion06ObtenerUsuarioActual"/>
+    <testcase name="Devuelve el correo del usuario autenticado" time="0.004" classname="1Autenticacion06ObtenerUsuarioActual"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 07 Obtener usuario actual sin token" id="b43873c5-ebbb-4a0e-a63b-3c2c914b8f36" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.003">
+    <testcase name="Código 401" time="0.003" classname="1Autenticacion07ObtenerUsuarioActualSinToken"/>
+    <testcase name="Esquema de error" time="0.003" classname="1Autenticacion07ObtenerUsuarioActualSinToken"/>
+    <testcase name="Mensaje esperado" time="0.003" classname="1Autenticacion07ObtenerUsuarioActualSinToken"/>
+  </testsuite>
+  <testsuite name="1. Autenticación / 08 Registrar usuario B" id="258f32dd-f385-43f3-93f2-9b46872b6ad4" timestamp="2026-10-31T00:00:22.341Z" tests="1" failures="0" errors="0" time="0.071">
+    <testcase name="Código 201" time="0.071" classname="1Autenticacion08RegistrarUsuarioB"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 09 Crear artículo (A)" id="f70e5b73-f0f7-4c23-a02b-9ff6a1ea98d8" timestamp="2026-10-31T00:00:22.341Z" tests="4" failures="0" errors="0" time="0.027">
+    <testcase name="Código 201" time="0.027" classname="2Articulos09CrearArticuloA"/>
+    <testcase name="Esquema de artículo" time="0.027" classname="2Articulos09CrearArticuloA"/>
+    <testcase name="Slug generado desde el título (RF-07)" time="0.027" classname="2Articulos09CrearArticuloA"/>
+    <testcase name="Autor es el usuario A" time="0.027" classname="2Articulos09CrearArticuloA"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 10 Crear artículo sin título" id="aefbaeb5-3776-4d19-9488-4e8502e29e5a" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.005">
+    <testcase name="Código 422" time="0.005" classname="2Articulos10CrearArticuloSinTitulo"/>
+    <testcase name="Esquema de error" time="0.005" classname="2Articulos10CrearArticuloSinTitulo"/>
+    <testcase name="Mensaje esperado" time="0.005" classname="2Articulos10CrearArticuloSinTitulo"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 11 Obtener artículo por slug" id="6b0ca956-6b21-4eeb-85ea-df5b19065d67" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.011">
+    <testcase name="Código 200" time="0.011" classname="2Articulos11ObtenerArticuloPorSlug"/>
+    <testcase name="Esquema de artículo" time="0.011" classname="2Articulos11ObtenerArticuloPorSlug"/>
+    <testcase name="Contiene las dos etiquetas" time="0.011" classname="2Articulos11ObtenerArticuloPorSlug"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 12 Editar artículo por otro usuario (B)" id="02d50444-9a82-4e17-869e-780bf5f2465e" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.006">
+    <testcase name="Código 403" time="0.006" classname="2Articulos12EditarArticuloPorOtroUsuarioB"/>
+    <testcase name="Esquema de error" time="0.006" classname="2Articulos12EditarArticuloPorOtroUsuarioB"/>
+    <testcase name="Mensaje esperado" time="0.006" classname="2Articulos12EditarArticuloPorOtroUsuarioB"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 13 Editar artículo por su autor (A)" id="90d1915e-08fd-4f67-9e7b-e2cab5697678" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="Código 200" time="0.013" classname="2Articulos13EditarArticuloPorSuAutorA"/>
+    <testcase name="Cuerpo actualizado" time="0.013" classname="2Articulos13EditarArticuloPorSuAutorA"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 14 Listar artículos por etiqueta" id="243dc217-eab8-423a-9c9e-f242f6be39f3" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.015">
+    <testcase name="Código 200" time="0.015" classname="2Articulos14ListarArticulosPorEtiqueta"/>
+    <testcase name="Esquema de listado" time="0.015" classname="2Articulos14ListarArticulosPorEtiqueta"/>
+    <testcase name="Solo artículos con la etiqueta (RF-15)" time="0.015" classname="2Articulos14ListarArticulosPorEtiqueta"/>
+  </testsuite>
+  <testsuite name="2. Artículos / 15 Listar con limit=101 (valor límite)" id="f1735013-46bd-44ae-ada2-a19a50647352" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="Código 200" time="0.013" classname="2Articulos15ListarConLimit101ValorLimite"/>
+    <testcase name="Nunca devuelve más de 100 artículos (RF-14)" time="0.013" classname="2Articulos15ListarConLimit101ValorLimite"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 16 B sigue a A" id="a5fb7e2f-2da4-4bc8-a04a-605ae473b545" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="Código 200" time="0.009" classname="3InteraccionSocial16BSigueAA"/>
+    <testcase name="following = true" time="0.009" classname="3InteraccionSocial16BSigueAA"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 17 Feed de B incluye el artículo de A" id="891b7d88-f116-4c0a-9404-6c0afe923a3d" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.012">
+    <testcase name="Código 200" time="0.012" classname="3InteraccionSocial17FeedDeBIncluyeElArticuloDeA"/>
+    <testcase name="El feed contiene el artículo del autor seguido (RF-13)" time="0.012" classname="3InteraccionSocial17FeedDeBIncluyeElArticuloDeA"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 18 A intenta seguirse a sí mismo" id="8ed9d553-3f4a-4ec0-a37a-6a618a50a849" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.003">
+    <testcase name="Código 422" time="0.003" classname="3InteraccionSocial18AIntentaSeguirseASiMismo"/>
+    <testcase name="Esquema de error" time="0.003" classname="3InteraccionSocial18AIntentaSeguirseASiMismo"/>
+    <testcase name="Mensaje esperado" time="0.003" classname="3InteraccionSocial18AIntentaSeguirseASiMismo"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 19 B marca favorito" id="9a742521-4d7b-484d-870c-cfbf143caff9" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="Código 200" time="0.013" classname="3InteraccionSocial19BMarcaFavorito"/>
+    <testcase name="favorited = true y contador = 1 (RF-11)" time="0.013" classname="3InteraccionSocial19BMarcaFavorito"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 20 B marca favorito otra vez (idempotencia)" id="f2e00e8a-9642-4e23-aa04-a30257b22027" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.014">
+    <testcase name="Código 200" time="0.014" classname="3InteraccionSocial20BMarcaFavoritoOtraVezIdempotencia"/>
+    <testcase name="El contador sigue en 1" time="0.014" classname="3InteraccionSocial20BMarcaFavoritoOtraVezIdempotencia"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 21 B quita favorito" id="24738c74-5953-4c17-b5a6-68e3fc599ccc" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="Código 200" time="0.011" classname="3InteraccionSocial21BQuitaFavorito"/>
+    <testcase name="favorited = false y contador = 0" time="0.011" classname="3InteraccionSocial21BQuitaFavorito"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 22 B comenta el artículo" id="51eb6038-2afa-4fef-9f14-e17d65ffd988" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="Código 201" time="0.009" classname="3InteraccionSocial22BComentaElArticulo"/>
+    <testcase name="Esquema de comentario" time="0.009" classname="3InteraccionSocial22BComentaElArticulo"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 23 Comentario de 1001 caracteres" id="ed3f3378-21bc-4ed5-93b4-a4f7f3001a73" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.004">
+    <testcase name="Código 422" time="0.004" classname="3InteraccionSocial23ComentarioDe1001Caracteres"/>
+    <testcase name="Esquema de error" time="0.004" classname="3InteraccionSocial23ComentarioDe1001Caracteres"/>
+    <testcase name="Mensaje esperado" time="0.004" classname="3InteraccionSocial23ComentarioDe1001Caracteres"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 24 Listar comentarios" id="65549d96-07bb-4d6b-b6d7-7fa9eb20c05a" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="Código 200" time="0.010" classname="3InteraccionSocial24ListarComentarios"/>
+    <testcase name="Incluye el comentario creado" time="0.010" classname="3InteraccionSocial24ListarComentarios"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 25 A intenta borrar el comentario de B" id="a47d7471-e2ff-40b8-9490-459006b53bda" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.005">
+    <testcase name="Código 403" time="0.005" classname="3InteraccionSocial25AIntentaBorrarElComentarioDeB"/>
+    <testcase name="Esquema de error" time="0.005" classname="3InteraccionSocial25AIntentaBorrarElComentarioDeB"/>
+    <testcase name="Mensaje esperado" time="0.005" classname="3InteraccionSocial25AIntentaBorrarElComentarioDeB"/>
+  </testsuite>
+  <testsuite name="3. Interacción social / 26 B borra su comentario" id="139528f5-9f92-4b1d-a5ab-7d351ba49fb2" timestamp="2026-10-31T00:00:22.341Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="Código 200" time="0.006" classname="3InteraccionSocial26BBorraSuComentario"/>
+  </testsuite>
+  <testsuite name="4. Autorización y limpieza / 27 B intenta borrar el artículo de A" id="79238e0d-4d93-4961-8d8b-a61283ba4054" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.007">
+    <testcase name="Código 403" time="0.007" classname="4AutorizacionYLimpieza27BIntentaBorrarElArticuloDeA"/>
+    <testcase name="Esquema de error" time="0.007" classname="4AutorizacionYLimpieza27BIntentaBorrarElArticuloDeA"/>
+    <testcase name="Mensaje esperado" time="0.007" classname="4AutorizacionYLimpieza27BIntentaBorrarElArticuloDeA"/>
+  </testsuite>
+  <testsuite name="4. Autorización y limpieza / 28 A borra su artículo" id="7108682c-c98c-4d1e-bb75-818ef3012dce" timestamp="2026-10-31T00:00:22.341Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="Código 200" time="0.011" classname="4AutorizacionYLimpieza28ABorraSuArticulo"/>
+    <testcase name="Mensaje de confirmación" time="0.011" classname="4AutorizacionYLimpieza28ABorraSuArticulo"/>
+  </testsuite>
+  <testsuite name="4. Autorización y limpieza / 29 El artículo borrado ya no existe" id="a43cdbc7-5b70-4bcf-9133-3b64367c3883" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.005">
+    <testcase name="Código 404" time="0.005" classname="4AutorizacionYLimpieza29ElArticuloBorradoYaNoExiste"/>
+    <testcase name="Esquema de error" time="0.005" classname="4AutorizacionYLimpieza29ElArticuloBorradoYaNoExiste"/>
+    <testcase name="Mensaje esperado" time="0.005" classname="4AutorizacionYLimpieza29ElArticuloBorradoYaNoExiste"/>
+  </testsuite>
+  <testsuite name="4. Autorización y limpieza / 30 Token manipulado es rechazado" id="d02e0fd4-8fa4-4c80-9e24-e6e5530f30ee" timestamp="2026-10-31T00:00:22.341Z" tests="3" failures="0" errors="0" time="0.003">
+    <testcase name="Código 401" time="0.003" classname="4AutorizacionYLimpieza30TokenManipuladoEsRechazado"/>
+    <testcase name="Esquema de error" time="0.003" classname="4AutorizacionYLimpieza30TokenManipuladoEsRechazado"/>
+    <testcase name="Mensaje esperado" time="0.003" classname="4AutorizacionYLimpieza30TokenManipuladoEsRechazado"/>
+  </testsuite>
+</testsuites>
