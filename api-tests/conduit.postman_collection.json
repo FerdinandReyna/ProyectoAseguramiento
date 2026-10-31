@@ -1,0 +1,1446 @@
+{
+  "info": {
+    "_postman_id": "1a7575a6-ff83-4ab3-9a9b-c1468d7f972b",
+    "name": "Conduit - Pruebas de API",
+    "description": "Pruebas de API (no unitarias) del backend de Conduit. Encadena el flujo de negocio completo: registro, inicio de sesión, publicación, edición, seguimiento, feed, favoritos, comentarios y eliminación. Se ejecuta con Newman en el pipeline.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "01 Registrar usuario A",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Identificador único por ejecución para no chocar con datos de corridas anteriores",
+                  "const runId = Date.now().toString(36);",
+                  "pm.collectionVariables.set(\"runId\", runId);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const userSchema = {",
+                  "  type: \"object\", required: [\"user\"],",
+                  "  properties: { user: { type: \"object\", required: [\"username\", \"token\"],",
+                  "    properties: { username: { type: \"string\" }, token: { type: \"string\" } },",
+                  "    not: { required: [\"password\"] } } }",
+                  "};",
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Esquema de usuario sin contraseña (RNF-04)\", () => pm.response.to.have.jsonSchema(userSchema));",
+                  "pm.test(\"Usuario creado con el nombre enviado\", () => {",
+                  "  pm.expect(pm.response.json().user.username).to.eql(\"qa_a_\" + pm.collectionVariables.get(\"runId\"));",
+                  "});",
+                  "pm.test(\"Tiempo de respuesta menor a 800 ms\", () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"username\": \"qa_a_{{runId}}\",\n    \"email\": \"qa_a_{{runId}}@test.com\",\n    \"password\": \"Clave1234\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "02 Registrar con correo duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"Email already exists\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"username\": \"otro_{{runId}}\",\n    \"email\": \"qa_a_{{runId}}@test.com\",\n    \"password\": \"Clave1234\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "03 Registrar con contraseña de 7 caracteres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"between 8 and 64\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"username\": \"corta_{{runId}}\",\n    \"email\": \"corta_{{runId}}@test.com\",\n    \"password\": \"1234567\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "04 Iniciar sesión A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const userSchema = {",
+                  "  type: \"object\", required: [\"user\"],",
+                  "  properties: { user: { type: \"object\", required: [\"username\", \"token\"],",
+                  "    properties: { username: { type: \"string\" }, token: { type: \"string\" } },",
+                  "    not: { required: [\"password\"] } } }",
+                  "};",
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Esquema de usuario\", () => pm.response.to.have.jsonSchema(userSchema));",
+                  "const token = pm.response.json().user.token;",
+                  "pm.test(\"Token JWT con tres partes\", () => pm.expect(token.split(\".\")).to.have.lengthOf(3));",
+                  "pm.collectionVariables.set(\"tokenA\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"email\": \"qa_a_{{runId}}@test.com\",\n    \"password\": \"Clave1234\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "05 Iniciar sesión con contraseña incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"Wrong email/password\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"email\": \"qa_a_{{runId}}@test.com\",\n    \"password\": \"incorrecta\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 Obtener usuario actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve el correo del usuario autenticado\", () => {",
+                  "  pm.expect(pm.response.json().user.email).to.eql(\"qa_a_\" + pm.collectionVariables.get(\"runId\") + \"@test.com\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "name": "07 Obtener usuario actual sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"login first\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "name": "08 Registrar usuario B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"tokenB\", pm.response.json().user.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"username\": \"qa_b_{{runId}}\",\n    \"email\": \"qa_b_{{runId}}@test.com\",\n    \"password\": \"Clave1234\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Artículos",
+      "item": [
+        {
+          "name": "09 Crear artículo (A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const articleSchema = {",
+                  "  type: \"object\", required: [\"article\"],",
+                  "  properties: { article: { type: \"object\",",
+                  "    required: [\"slug\", \"title\", \"description\", \"body\", \"tagList\", \"author\", \"favorited\", \"favoritesCount\"],",
+                  "    properties: { slug: { type: \"string\" }, tagList: { type: \"array\", items: { type: \"string\" } },",
+                  "      favorited: { type: \"boolean\" }, favoritesCount: { type: \"integer\" },",
+                  "      author: { type: \"object\", required: [\"username\"] } } } }",
+                  "};",
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Esquema de artículo\", () => pm.response.to.have.jsonSchema(articleSchema));",
+                  "const a = pm.response.json().article;",
+                  "pm.test(\"Slug generado desde el título (RF-07)\", () => pm.expect(a.slug).to.eql(\"articulo-qa-\" + pm.collectionVariables.get(\"runId\")));",
+                  "pm.test(\"Autor es el usuario A\", () => pm.expect(a.author.username).to.eql(\"qa_a_\" + pm.collectionVariables.get(\"runId\")));",
+                  "pm.collectionVariables.set(\"slug\", a.slug);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"article\": {\n    \"title\": \"Articulo QA {{runId}}\",\n    \"description\": \"Prueba de API\",\n    \"body\": \"Contenido de prueba\",\n    \"tagList\": [\n      \"qa{{runId}}\",\n      \"newman\"\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Crear artículo sin título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"title is required\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"article\": {\n    \"title\": \"\",\n    \"description\": \"x\",\n    \"body\": \"x\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 Obtener artículo por slug",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const articleSchema = {",
+                  "  type: \"object\", required: [\"article\"],",
+                  "  properties: { article: { type: \"object\",",
+                  "    required: [\"slug\", \"title\", \"description\", \"body\", \"tagList\", \"author\", \"favorited\", \"favoritesCount\"],",
+                  "    properties: { slug: { type: \"string\" }, tagList: { type: \"array\", items: { type: \"string\" } },",
+                  "      favorited: { type: \"boolean\" }, favoritesCount: { type: \"integer\" },",
+                  "      author: { type: \"object\", required: [\"username\"] } } } }",
+                  "};",
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Esquema de artículo\", () => pm.response.to.have.jsonSchema(articleSchema));",
+                  "pm.test(\"Contiene las dos etiquetas\", () => pm.expect(pm.response.json().article.tagList).to.have.members([\"qa\" + pm.collectionVariables.get(\"runId\"), \"newman\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12 Editar artículo por otro usuario (B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"not the author\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"article\": {\n    \"body\": \"intento de B\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Editar artículo por su autor (A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Cuerpo actualizado\", () => pm.expect(pm.response.json().article.body).to.eql(\"Contenido editado\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"article\": {\n    \"body\": \"Contenido editado\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Listar artículos por etiqueta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = { type: \"object\", required: [\"articles\", \"articlesCount\"],",
+                  "  properties: { articles: { type: \"array\" }, articlesCount: { type: \"integer\" } } };",
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Esquema de listado\", () => pm.response.to.have.jsonSchema(schema));",
+                  "pm.test(\"Solo artículos con la etiqueta (RF-15)\", () => {",
+                  "  const tag = \"qa\" + pm.collectionVariables.get(\"runId\");",
+                  "  const list = pm.response.json().articles;",
+                  "  pm.expect(list.length).to.be.above(0);",
+                  "  list.forEach((a) => pm.expect(a.tagList).to.include(tag));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles?tag=qa{{runId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles?tag=qa{{runId}}&limit=10"
+              ]
+            }
+          }
+        },
+        {
+          "name": "15 Listar con limit=101 (valor límite)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nunca devuelve más de 100 artículos (RF-14)\", () => pm.expect(pm.response.json().articles.length).to.be.at.most(100));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles?limit=101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles?limit=101"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Interacción social",
+      "item": [
+        {
+          "name": "16 B sigue a A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"following = true\", () => pm.expect(pm.response.json().profile.following).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profiles/qa_a_{{runId}}/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profiles",
+                "qa_a_{{runId}}",
+                "follow"
+              ]
+            }
+          }
+        },
+        {
+          "name": "17 Feed de B incluye el artículo de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El feed contiene el artículo del autor seguido (RF-13)\", () => {",
+                  "  const slugs = pm.response.json().articles.map((a) => a.slug);",
+                  "  pm.expect(slugs).to.include(pm.collectionVariables.get(\"slug\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/feed?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "feed?limit=20"
+              ]
+            }
+          }
+        },
+        {
+          "name": "18 A intenta seguirse a sí mismo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"cannot follow yourself\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profiles/qa_a_{{runId}}/follow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profiles",
+                "qa_a_{{runId}}",
+                "follow"
+              ]
+            }
+          }
+        },
+        {
+          "name": "19 B marca favorito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"favorited = true y contador = 1 (RF-11)\", () => {",
+                  "  const a = pm.response.json().article;",
+                  "  pm.expect(a.favorited).to.be.true;",
+                  "  pm.expect(a.favoritesCount).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "favorite"
+              ]
+            }
+          }
+        },
+        {
+          "name": "20 B marca favorito otra vez (idempotencia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El contador sigue en 1\", () => pm.expect(pm.response.json().article.favoritesCount).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "favorite"
+              ]
+            }
+          }
+        },
+        {
+          "name": "21 B quita favorito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"favorited = false y contador = 0\", () => {",
+                  "  const a = pm.response.json().article;",
+                  "  pm.expect(a.favorited).to.be.false;",
+                  "  pm.expect(a.favoritesCount).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/favorite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "favorite"
+              ]
+            }
+          }
+        },
+        {
+          "name": "22 B comenta el artículo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = { type: \"object\", required: [\"comment\"],",
+                  "  properties: { comment: { type: \"object\", required: [\"id\", \"body\", \"author\"] } } };",
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Esquema de comentario\", () => pm.response.to.have.jsonSchema(schema));",
+                  "pm.collectionVariables.set(\"commentId\", pm.response.json().comment.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "comments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": {\n    \"body\": \"Comentario de prueba\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "23 Comentario de 1001 caracteres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"longComment\", \"x\".repeat(1001));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"at most 1000\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "comments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": {\n    \"body\": \"{{longComment}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "24 Listar comentarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Incluye el comentario creado\", () => {",
+                  "  const ids = pm.response.json().comments.map((c) => c.id);",
+                  "  pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"commentId\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "comments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "25 A intenta borrar el comentario de B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"not the author\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/comments/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "comments",
+                "{{commentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "26 B borra su comentario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}/comments/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}",
+                "comments",
+                "{{commentId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Autorización y limpieza",
+      "item": [
+        {
+          "name": "27 B intenta borrar el artículo de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"not the author\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "28 A borra su artículo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mensaje de confirmación\", () => pm.expect(pm.response.json().message.body[0]).to.include(\"deleted\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "29 El artículo borrado ya no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"Article not found\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{slug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{slug}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "30 Token manipulado es rechazado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"badToken\", pm.collectionVariables.get(\"tokenA\") + \"x\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\", required: [\"errors\"],",
+                  "  properties: { errors: { type: \"object\", required: [\"body\"], properties: { body: { type: \"array\", minItems: 1 } } } }",
+                  "};",
+                  "pm.test(\"Código 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Esquema de error\", () => pm.response.to.have.jsonSchema(errorSchema));",
+                  "pm.test(\"Mensaje esperado\", () => pm.expect(pm.response.json().errors.body[0]).to.include(\"invalid signature\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{badToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "tokenA",
+      "value": ""
+    },
+    {
+      "key": "tokenB",
+      "value": ""
+    },
+    {
+      "key": "slug",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
+    },
+    {
+      "key": "longComment",
+      "value": ""
+    },
+    {
+      "key": "badToken",
+      "value": ""
+    }
+  ]
+}
