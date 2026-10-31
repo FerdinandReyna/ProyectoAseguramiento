@@ -8,7 +8,10 @@ const {
 const errorHandler = (error, req, res, next) => {
   console.log("\x1b[31m%s\x1b[0m", "▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼");
 
-  if (error instanceof UnauthorizedError) {
+  const isJwtError =
+    error.name === "JsonWebTokenError" || error.name === "TokenExpiredError";
+
+  if (error instanceof UnauthorizedError || isJwtError) {
     console.log(error);
 
     res.status(401).json({ errors: { body: [error.message] } });
