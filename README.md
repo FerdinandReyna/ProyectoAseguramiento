@@ -1,3 +1,51 @@
+# Conduit — Proyecto de Aseguramiento de la Calidad de Software 2026
+
+Fork de [TonyMckes/conduit-realworld-example-app](https://github.com/TonyMckes/conduit-realworld-example-app) (licencia MIT) usado como aplicación bajo evaluación en el curso de Aseguramiento de la Calidad de Software, Universidad Mariano Gálvez de Guatemala.
+
+Autor: Ferdinand Ronaldo Méndez Reyna.
+
+## Instalación
+
+Requisitos: Node.js 22 y PostgreSQL 16.
+
+```bash
+npm install
+cp backend/.env.example backend/.env   # completar los datos DEV_DB_* y JWT_KEY
+npm run sqlz -- db:create
+npm run dev                            # frontend en :3000, API en :3001
+```
+
+## Ejecución de pruebas
+
+| Tipo | Comando | Qué hace |
+|---|---|---|
+| Unitarias | `npm run test:unit` | Vitest, backend (Node) y frontend (jsdom) |
+| Unitarias con cobertura | `npm run test:coverage` | Cobertura de los módulos críticos (E2) en `coverage/` |
+| API | `npm run test:api` | Newman ejecuta `api-tests/conduit.postman_collection.json` contra la API local en el puerto 3001 |
+| API en la nube | `npm run test:api:cloud` | Igual, contra la URL de `api-tests/cloud.postman_environment.json` |
+| Carga | `k6 run -e BASE_URL=https://TU-APP.onrender.com load-tests/conduit-load.js` | Rampa de 0 a 50 usuarios virtuales, 5 minutos sostenidos |
+
+Línea base del repositorio original: 12 pruebas (3 archivos: `backend/helper/helpers.test.js`, `frontend/src/helpers/dateFormatter.test.js` y `frontend/src/helpers/errorHandler.test.js`). Todas las demás pruebas fueron escritas para este proyecto.
+
+## Pipeline
+
+El archivo `.github/workflows/pipeline.yml` (GitHub Actions) se ejecuta en cada push y Pull Request hacia `dev`, `qa` y `main`, en este orden:
+
+1. Compilación
+2. Pruebas unitarias con cobertura
+3. SonarCloud con espera del quality gate
+4. Pruebas de API con Newman contra un PostgreSQL de servicio
+5. Despliegue en Render (solo en push a `qa` o `main`)
+
+Configuración necesaria en GitHub:
+- Secreto de repositorio `SONAR_TOKEN` (SonarCloud → My Account → Security).
+- Ambientes `qa` y `production` (Settings → Environments), cada uno con el secreto `RENDER_DEPLOY_HOOK` y la variable `APP_URL`.
+- Protección de ramas según `docs/politica-de-ramas.md`.
+
+Para correr el pipeline manualmente: pestaña **Actions → CI-CD Conduit → Run workflow**.
+
+---
+
 # ![RealWorld Example App](logo.png)
 
 > **React / Vite + SWC / Express.js / Sequelize / PostgreSQL codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://realworld.io/) spec and API.**
